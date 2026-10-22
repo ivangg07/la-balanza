@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LA BALANZA — Reto diario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#ffd24a; --gold-d:#b88a1e; --red:#ff4d5e; --green:#4ade80; --amber:#ffb347;
+  --ink:#0c0f1f; --wood:#7a4a22; --wood-d:#3b2209; --cream:#f6e7c1;
+  --px:'Press Start 2P', 'Courier New', monospace;
+  --vt:'VT323', 'Courier New', monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  min-height:100vh;
+  font-family:var(--vt);
+  font-size:22px;
+  color:var(--cream);
+  background-color:#251513;
+  background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' shape-rendering='crispEdges'%3E%3Crect width='64' height='32' fill='%23160c0b'/%3E%3Crect x='2' y='2' width='28' height='12' fill='%23442823'/%3E%3Crect x='34' y='2' width='28' height='12' fill='%2350302a'/%3E%3Crect x='18' y='18' width='28' height='12' fill='%2349291f'/%3E%3Crect x='50' y='18' width='14' height='12' fill='%23442823'/%3E%3Crect x='0' y='18' width='14' height='12' fill='%23442823'/%3E%3Crect x='2' y='2' width='28' height='2' fill='%23593730'/%3E%3Crect x='34' y='2' width='28' height='2' fill='%23623b33'/%3E%3Crect x='18' y='18' width='28' height='2' fill='%23593730'/%3E%3C/svg%3E");
+  background-size:64px 32px;
+  image-rendering:pixelated;
+  padding:18px 12px 40px;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.65) 100%);
+}
+.wrap{position:relative;z-index:1;max-width:760px;margin:0 auto}
+header{text-align:center;margin-bottom:12px}
+h1{
+  font-family:var(--px);margin:6px 0 8px;font-weight:400;
+  font-size:clamp(22px,6vw,40px);color:var(--gold);letter-spacing:2px;
+  text-shadow:3px 3px 0 #b3261e,6px 6px 0 #000;
+}
+.sub{margin:0;font-size:22px;color:var(--cream);text-shadow:2px 2px 0 #000}
+
+/* Selector de retos */
+.tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0 14px}
+.tab{
+  font-family:var(--px);font-size:10px;line-height:1.4;padding:10px 12px;cursor:pointer;
+  color:var(--cream);background:#2d1a0d;border:4px solid #000;
+  box-shadow:inset 0 0 0 2px #8a5528,0 4px 0 #000;
+}
+.tab:hover{background:#3d2411}
+.tab.active{background:var(--gold);color:#2a1a00;box-shadow:inset 0 0 0 2px #fff3b0,0 4px 0 #000}
+
+/* Mueble arcade */
+.cabinet{
+  position:relative;padding:16px;border:6px solid #000;
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 5px),
+    linear-gradient(#8a5528,#6a3f1c);
+  box-shadow:inset 0 0 0 4px #a8692f, inset 0 0 0 8px #4b2a10, 0 10px 0 #000, 0 18px 30px rgba(0,0,0,.6);
+}
+.cabinet::before,.cabinet::after{
+  content:"";position:absolute;top:8px;width:10px;height:10px;background:var(--gold);border:2px solid #000;
+}
+.cabinet::before{left:8px}.cabinet::after{right:8px}
+.screen{
+  position:relative;padding:12px;border:6px solid #000;
+  background:linear-gradient(#10142b,#0a0c1a 60%,#13102a);
+  box-shadow:inset 0 0 0 3px #28306b, inset 0 0 40px rgba(80,100,255,.12);
+  overflow:hidden;
+}
+.screen::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+}
+.screen.win{animation:glow 1.2s ease-in-out 3}
+@keyframes glow{0%,100%{box-shadow:inset 0 0 0 3px #28306b, inset 0 0 40px rgba(80,100,255,.12)}50%{box-shadow:inset 0 0 0 3px var(--gold), inset 0 0 70px rgba(255,210,74,.45)}}
+
+.panels{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch}
+.panel{
+  border:4px solid #000;background:#0a0d1d;padding:8px 10px;
+  box-shadow:inset 0 0 0 2px #2a3270;
+}
+.panel h3{font-family:var(--px);font-weight:400;font-size:8px;line-height:1.5;margin:0 0 6px;color:#8fa0ff}
+.panel .lbl{font-size:22px;line-height:1;color:var(--cream)}
+.panel .val{font-family:var(--px);font-size:16px;color:var(--gold);margin-top:6px;text-shadow:0 0 8px rgba(255,210,74,.6)}
+.panel.right{text-align:right}
+.led-wrap{
+  min-width:150px;text-align:center;border:4px solid #000;background:#050505;padding:6px 10px;
+  box-shadow:inset 0 0 0 2px #333,0 0 0 2px #5a3a1a;display:flex;flex-direction:column;justify-content:center;
+}
+.led{font-family:var(--vt);font-size:52px;line-height:.9;letter-spacing:3px;color:var(--red);text-shadow:0 0 6px currentColor,0 0 16px currentColor}
+.led.amber{color:var(--amber)} .led.green{color:var(--green)} .led.red{color:var(--red)}
+.led-sub{font-size:18px;color:#9aa3d6;margin-top:4px;min-height:20px}
+
+svg#scale{display:block;width:100%;height:auto;max-height:62vh;margin:6px auto 0;image-rendering:pixelated}
+#beam,#plateL,#plateR,#needle{
+  transition:transform .8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-box:view-box;
+}
+#beam{transform-origin:300px 170px}
+#plateL{transform-origin:90px 170px}
+#plateR{transform-origin:510px 170px}
+#needle{transform-origin:300px 430px}
+.blk.drop{animation:drop .45s cubic-bezier(.55,0,1,.45) both}
+@keyframes drop{from{transform:translateY(-230px)}to{transform:translateY(0)}}
+
+.chips{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;position:relative;z-index:1}
+.chip{
+  border:3px solid #000;background:#0a0d1d;padding:4px 8px;font-size:20px;display:flex;justify-content:space-between;gap:8px;
+  box-shadow:inset 0 0 0 2px #2a3270;min-height:34px;align-items:center;
+}
+.chip.empty{color:#4c5590;justify-content:center}
+.chip .dot{display:inline-block;width:12px;height:12px;border:2px solid #000;margin-right:6px}
+.chip .v{color:var(--gold)}
+
+.controls{margin-top:14px;display:flex;flex-direction:column;gap:12px}
+.pips{font-family:var(--px);font-size:9px;color:var(--cream);display:flex;gap:8px;align-items:center;text-shadow:2px 2px 0 #000;flex-wrap:wrap}
+.pip{width:18px;height:18px;border:3px solid #000;background:#2a1b0d;box-shadow:inset 0 0 0 2px #8a5528}
+.pip.used{background:var(--gold);box-shadow:inset 0 0 0 2px #fff3b0}
+.inputrow{display:flex;gap:10px;flex-wrap:wrap}
+.ac{position:relative;flex:1 1 240px}
+#q{
+  width:100%;font-family:var(--vt);font-size:26px;padding:8px 12px;color:var(--gold);background:#070a17;
+  border:4px solid #000;box-shadow:inset 0 0 0 2px #3a45a0;outline:none;caret-color:var(--gold);
+}
+#q:focus{box-shadow:inset 0 0 0 2px var(--gold)}
+#q:disabled{opacity:.5}
+#list{
+  position:absolute;left:0;right:0;top:100%;margin:4px 0 0;padding:0;list-style:none;z-index:50;display:none;
+  max-height:230px;overflow-y:auto;background:#070a17;border:4px solid var(--gold);box-shadow:0 6px 0 #000;
+}
+#list.open{display:block}
+#list li{padding:5px 12px;font-size:24px;cursor:pointer;color:var(--cream);border-bottom:2px dashed #1c2252}
+#list li b{color:var(--gold);font-weight:400;background:rgba(255,210,74,.15)}
+#list li.active,#list li:hover{background:var(--gold);color:#2a1a00}
+#list li.active b,#list li:hover b{color:#2a1a00;background:transparent;text-decoration:underline}
+#list li.none{color:#6d77c4;cursor:default}
+#list li.none:hover{background:transparent;color:#6d77c4}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{
+  font-family:var(--px);font-size:10px;line-height:1.4;padding:12px 14px;cursor:pointer;color:#fff;
+  background:#2e7d32;border:4px solid #000;box-shadow:inset 0 -4px 0 rgba(0,0,0,.35),inset 0 4px 0 rgba(255,255,255,.25),0 5px 0 #000;
+  text-transform:uppercase;
+}
+.btn:hover{filter:brightness(1.12)}
+.btn:active{transform:translateY(4px);box-shadow:inset 0 -4px 0 rgba(0,0,0,.35),inset 0 4px 0 rgba(255,255,255,.25),0 1px 0 #000}
+.btn:disabled{filter:grayscale(1) brightness(.6);cursor:not-allowed;transform:none}
+.btn.gold{background:#c89a10;color:#2a1a00}
+.btn.red{background:#b3261e}
+.btn.blue{background:#2b4bbd}
+.btn.small{padding:10px 12px}
+#msg{min-height:26px;font-size:22px;color:var(--amber);text-shadow:2px 2px 0 #000}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.opts{display:flex;gap:14px;flex-wrap:wrap}
+.seg{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.seg .l{font-family:var(--px);font-size:8px;color:#e8d7a8;text-shadow:2px 2px 0 #000;margin-right:2px}
+.segbtn{font-family:var(--px);font-size:8px;padding:8px 9px;cursor:pointer;color:var(--cream);background:#2d1a0d;border:3px solid #000;box-shadow:inset 0 0 0 2px #8a5528,0 3px 0 #000}
+.segbtn.on{background:var(--gold);color:#2a1a00;box-shadow:inset 0 0 0 2px #fff3b0,0 3px 0 #000}
+.pool{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.pbtn{font-family:var(--vt);font-size:22px;line-height:1.1;padding:8px 8px;cursor:pointer;color:var(--cream);background:#0a0d1d;border:3px solid #000;box-shadow:inset 0 0 0 2px #3a45a0,0 3px 0 #000;text-align:center}
+.pbtn:hover:not(:disabled){background:#161c42}
+.pbtn.sel{background:var(--gold);color:#2a1a00;box-shadow:inset 0 0 0 2px #fff3b0,0 3px 0 #000}
+.pbtn.used,.pbtn:disabled{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.adbox{height:150px;display:flex;align-items:center;justify-content:center;border:4px dashed #3a45a0;background:repeating-linear-gradient(45deg,#0d1130 0 12px,#0a0d1d 12px 24px);color:#8fa0ff;font-size:24px;padding:10px}
+.adbar{height:16px;border:3px solid #000;background:#05070f;margin:12px 0 4px}
+.adbar i{display:block;height:100%;width:0;background:var(--gold);transition:width 1s linear}
+#adTxt{font-size:24px;margin:6px 0 0;color:var(--cream)}
+.poolhint{font-size:20px;color:#e8d7a8;text-shadow:2px 2px 0 #000}
+
+/* Pantalla de instrucciones */
+.overlay.intro{background:rgba(8,4,3,.94);z-index:150}
+.intro .modal{max-width:640px;padding:20px 18px}
+.intro h2{font-size:15px;margin:4px 0 12px}
+.intro p{font-size:24px;line-height:1.15;margin:8px 0;text-align:left}
+.intro p.c{text-align:center}
+.intro b{color:var(--gold);font-weight:400}
+.intro .logo{font-family:var(--px);font-size:clamp(24px,7vw,40px);color:var(--gold);text-shadow:3px 3px 0 #b3261e,6px 6px 0 #000;margin:10px 0 8px}
+.intro .big{font-size:72px;line-height:1;margin:6px 0}
+.demo{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.dbox{min-width:110px;padding:10px 12px;border:4px solid #000;background:#05070f;box-shadow:inset 0 0 0 2px #3a45a0;font-size:24px;text-align:center;color:var(--cream)}
+.dbox small{display:block;font-family:var(--px);font-size:7px;color:#8fa0ff;margin-bottom:6px;line-height:1.4}
+.dbox.q{color:var(--amber);font-family:var(--px);font-size:16px}
+.dbox.sel{background:var(--gold);color:#2a1a00;box-shadow:inset 0 0 0 2px #fff3b0}
+.dvs{font-size:34px}
+.rules{list-style:none;padding:0;margin:10px 0;text-align:left;counter-reset:r}
+.rules li{counter-increment:r;font-size:23px;line-height:1.15;margin:9px 0;padding-left:34px;position:relative}
+.rules li::before{content:counter(r);position:absolute;left:0;top:0;font-family:var(--px);font-size:10px;color:#2a1a00;background:var(--gold);border:2px solid #000;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+.stbl{display:grid;gap:6px;margin:10px 0}
+.stbl div{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:center;border:3px solid #000;background:#05070f;box-shadow:inset 0 0 0 2px #2a3270;padding:6px 10px;font-size:23px;text-align:left}
+.stbl span{font-size:26px;letter-spacing:2px;color:var(--gold);text-align:center}
+.intro .quick{display:grid;gap:10px;margin:14px 0 10px}
+.intro .quick div{display:flex;align-items:center;gap:16px;border:4px solid #000;background:#05070f;box-shadow:inset 0 0 0 2px #2a3270;padding:10px 14px;text-align:left}
+.intro .quick span{font-size:46px;line-height:1;flex:none;width:56px;text-align:center}
+.intro .quick p{margin:0;font-size:27px;line-height:1.1}
+.tip{border:3px dashed #3a45a0;padding:6px 10px;color:#c9d0ff;font-size:22px;margin-top:12px;text-align:left;line-height:1.15}
+.dots{display:flex;gap:8px;justify-content:center;margin:16px 0 6px}
+.dots i{width:12px;height:12px;border:2px solid #000;background:#2a3270}
+.dots i.on{background:var(--gold)}
+.introbtns{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px}
+.skip{background:none;border:0;color:#8fa0ff;font-family:var(--vt);font-size:22px;cursor:pointer;text-decoration:underline}
+.hbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.rangehint{font-size:18px;color:#8fa0ff;margin-top:8px;line-height:1.05}
+#dialInner{transition:opacity 1s} svg#scale:not(.rev) #dialInner{opacity:0}
+#dialQ{transition:opacity .6s} svg#scale.rev #dialQ{opacity:0}
+.pbtn{position:relative}
+.pbtn.placed{cursor:default;background:#121735;box-shadow:inset 0 0 0 2px #6d77c4,0 3px 0 #000}
+.pbtn.off{opacity:.5;cursor:default}
+.pbtn .pdot{display:inline-block;width:12px;height:12px;border:2px solid #000;margin-right:6px;vertical-align:-1px}
+.pbtn .pv{display:block;font-size:18px;color:var(--gold);margin-top:2px}
+.bars{display:grid;gap:6px;margin:10px 0}
+.bar{display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;font-size:22px;text-align:left}
+.bar span{color:var(--gold);text-align:right}
+.bar i{font-style:normal;background:#2b4bbd;border:3px solid #000;padding:0 8px;color:#fff;min-width:26px;display:block;line-height:1.2}
+.nextin{font-family:var(--px);font-size:9px;line-height:1.8;margin-top:12px;color:#8fa0ff}
+.nextin b{font-size:14px;color:var(--gold);display:block;margin-top:4px;font-weight:400}
+.wipe{color:#8f8466;font-size:16px}
+footer{margin-top:18px;text-align:center;font-size:18px;color:#c9b88c;text-shadow:2px 2px 0 #000}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100;padding:14px}
+.overlay.open{display:flex}
+.modal{
+  width:100%;max-width:480px;max-height:94vh;overflow:auto;padding:18px;text-align:center;
+  background:#0a0d1d;border:6px solid #000;box-shadow:inset 0 0 0 4px var(--gold),0 10px 0 #000;
+  animation:pop .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.modal h2{font-family:var(--px);font-weight:400;font-size:14px;line-height:1.6;margin:6px 0 10px;color:var(--gold);text-shadow:2px 2px 0 #000}
+.modal h2.lose{color:var(--red)}
+.stars{font-size:46px;letter-spacing:6px;margin:4px 0 10px;text-shadow:3px 3px 0 #000}
+.stars .on{color:var(--gold);text-shadow:0 0 12px rgba(255,210,74,.8),3px 3px 0 #000}
+.stars .off{color:#2a3270}
+.tbl{width:100%;border-collapse:collapse;margin:8px 0;font-size:24px;text-align:left}
+.tbl td{padding:3px 6px;border-bottom:2px dashed #1c2252}
+.tbl td:last-child{text-align:right;color:var(--gold)}
+.tbl tr.sum td{border-top:4px solid var(--gold);border-bottom:0;font-size:26px;color:var(--cream)}
+.tbl tr.sum td:last-child{color:var(--gold)}
+.stat{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:10px 0}
+.stat div{border:3px solid #000;background:#05070f;padding:6px 4px;box-shadow:inset 0 0 0 2px #2a3270}
+.stat small{display:block;font-family:var(--px);font-size:7px;color:#8fa0ff;margin-bottom:6px;line-height:1.4}
+.stat span{font-size:28px;color:var(--gold)}
+.modal .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.share-preview{white-space:pre-line;font-size:22px;background:#05070f;border:3px dashed #3a45a0;padding:8px;margin-top:10px;color:var(--cream)}
+.toast{
+  position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(30px);opacity:0;transition:all .3s;
+  font-family:var(--px);font-size:10px;background:var(--gold);color:#2a1a00;border:4px solid #000;padding:12px 16px;z-index:200;
+  box-shadow:0 5px 0 #000;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:620px){
+  .panels{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .panel{min-width:0;padding:8px}
+  .panel .lbl{font-size:20px;overflow-wrap:anywhere}
+  .panel .val{font-size:13px}
+  .rangehint{font-size:16px}
+  .led-wrap{grid-column:1 / -1;order:-1;min-width:0}
+  .led{font-size:44px}
+  .chips{grid-template-columns:1fr}
+  .cabinet{padding:12px}
+  body{font-size:20px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>LA BALANZA</h1>
+    <p class="sub">Reto diario <b id="dayNum"></b> · Iguala el plato misterioso a ojo</p>
+    <div class="hbtns">
+      <button class="btn blue small" id="howTo">❓ Cómo se juega</button>
+      <button class="btn blue small" id="statsBtn">📊 Estadísticas</button>
+    </div>
+  </header>
+
+  <main class="cabinet">
+    <section class="screen" id="screen">
+      <div class="panels">
+        <div class="panel">
+          <h3>PLATO IZQ.<br>OBJETIVO</h3>
+          <div class="lbl" id="lblTarget">—</div>
+          <div class="val" id="valTarget">0</div>
+          <div class="rangehint" id="rangeHint"></div>
+        </div>
+        <div class="led-wrap">
+          <div class="led red" id="led">0</div>
+          <div class="led-sub" id="ledSub"></div>
+        </div>
+        <div class="panel right">
+          <h3>PLATO DER.<br>TUS PESAS</h3>
+          <div class="lbl" id="lblRight">Pesas colocadas</div>
+          <div class="val" id="valRight">0</div>
+        </div>
+      </div>
+
+      <svg id="scale" viewBox="0 0 600 560" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" role="img" aria-label="Balanza de platos">
+        <defs>
+          <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4753a"/><stop offset="1" stop-color="#6b3d18"/></linearGradient>
+          <linearGradient id="woodH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6b3d18"/><stop offset=".5" stop-color="#b4753a"/><stop offset="1" stop-color="#6b3d18"/></linearGradient>
+          <linearGradient id="brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe58a"/><stop offset=".5" stop-color="#d9a92a"/><stop offset="1" stop-color="#8a6212"/></linearGradient>
+          <linearGradient id="brassH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a6212"/><stop offset=".5" stop-color="#ffe58a"/><stop offset="1" stop-color="#8a6212"/></linearGradient>
+        </defs>
+
+        <!-- Suelo / sombra -->
+        <rect x="120" y="544" width="360" height="8" fill="#000" opacity=".5"/>
+
+        <!-- Base -->
+        <rect x="150" y="514" width="300" height="30" fill="url(#wood)" stroke="#1d1006" stroke-width="4"/>
+        <rect x="150" y="514" width="300" height="6" fill="#d39a5c" opacity=".5"/>
+        <rect x="190" y="494" width="220" height="20" fill="url(#brass)" stroke="#1d1006" stroke-width="4"/>
+        <rect x="170" y="526" width="8" height="8" fill="#ffd24a" stroke="#000" stroke-width="2"/>
+        <rect x="422" y="526" width="8" height="8" fill="#ffd24a" stroke="#000" stroke-width="2"/>
+
+        <!-- Poste -->
+        <rect x="286" y="170" width="28" height="326" fill="url(#brassH)" stroke="#1d1006" stroke-width="4"/>
+        <rect x="294" y="176" width="4" height="316" fill="#fff3b0" opacity=".35"/>
+        <rect x="280" y="470" width="40" height="26" fill="url(#wood)" stroke="#1d1006" stroke-width="4"/>
+        <rect x="280" y="190" width="40" height="14" fill="url(#wood)" stroke="#1d1006" stroke-width="4"/>
+
+        <!-- Dial arcade -->
+        <rect x="222" y="338" width="156" height="122" fill="#14162a" stroke="#000" stroke-width="4"/>
+        <rect x="226" y="342" width="148" height="114" fill="none" stroke="url(#brass)" stroke-width="4"/>
+        <text id="dialQ" x="300" y="420" text-anchor="middle" font-family="Press Start 2P, monospace" font-size="26" fill="#ffb347">?</text>
+        <g id="dialInner">
+        <path d="M232 432 A68 68 0 0 1 368 432 Z" fill="#05070f" stroke="#000" stroke-width="3"/>
+        <g id="dialMarks"></g>
+        <rect x="232" y="434" width="136" height="16" fill="#05070f"/>
+        <text x="300" y="448" text-anchor="middle" font-family="Press Start 2P, monospace" font-size="7" fill="#8fa0ff">DESVIO</text>
+        <g id="needle">
+          <polygon points="296,432 304,432 300,372" fill="#ff4d5e" stroke="#000" stroke-width="2"/>
+        </g>
+        <circle cx="300" cy="430" r="8" fill="url(#brass)" stroke="#000" stroke-width="3"/>
+        </g>
+
+        <!-- Brazo con platos -->
+        <g id="beam">
+          <rect x="82" y="162" width="436" height="16" fill="url(#wood)" stroke="#1d1006" stroke-width="4"/>
+          <rect x="86" y="164" width="428" height="4" fill="#e0a868" opacity=".55"/>
+          <rect x="82" y="158" width="14" height="24" fill="url(#brass)" stroke="#1d1006" stroke-width="3"/>
+          <rect x="504" y="158" width="14" height="24" fill="url(#brass)" stroke="#1d1006" stroke-width="3"/>
+          <circle cx="90" cy="170" r="6" fill="#ffd24a" stroke="#000" stroke-width="2"/>
+          <circle cx="510" cy="170" r="6" fill="#ffd24a" stroke="#000" stroke-width="2"/>
+
+          <!-- Plato izquierdo -->
+          <g id="plateL">
+            <line x1="90" y1="170" x2="28" y2="290" stroke="#d9a92a" stroke-width="3" stroke-dasharray="6 3"/>
+            <line x1="90" y1="170" x2="152" y2="290" stroke="#d9a92a" stroke-width="3" stroke-dasharray="6 3"/>
+            <polygon points="20,290 160,290 140,310 40,310" fill="url(#brass)" stroke="#1d1006" stroke-width="4"/>
+            <rect x="20" y="288" width="140" height="6" fill="#fff3b0" opacity=".45"/>
+            <g>
+              <rect x="42" y="246" width="96" height="42" fill="#c0392b" stroke="#000" stroke-width="4"/>
+              <rect x="46" y="250" width="88" height="6" fill="#ff8a7a" opacity=".6"/>
+              <text id="targetBlockText" x="90" y="276" text-anchor="middle" font-family="Press Start 2P, monospace" font-size="12" fill="#fff">0</text>
+            </g>
+            <text x="90" y="338" text-anchor="middle" font-family="Press Start 2P, monospace" font-size="8" fill="#8fa0ff">OBJETIVO</text>
+          </g>
+
+          <!-- Plato derecho -->
+          <g id="plateR">
+            <line x1="510" y1="170" x2="448" y2="290" stroke="#d9a92a" stroke-width="3" stroke-dasharray="6 3"/>
+            <line x1="510" y1="170" x2="572" y2="290" stroke="#d9a92a" stroke-width="3" stroke-dasharray="6 3"/>
+            <g id="blocksR"></g>
+            <polygon points="440,290 580,290 560,310 460,310" fill="url(#brass)" stroke="#1d1006" stroke-width="4"/>
+            <rect x="440" y="288" width="140" height="6" fill="#fff3b0" opacity=".45"/>
+            <text id="plateRText" x="510" y="338" text-anchor="middle" font-family="Press Start 2P, monospace" font-size="8" fill="#8fa0ff">TUS PESAS</text>
+          </g>
+        </g>
+
+        <!-- Pivote -->
+        <circle cx="300" cy="170" r="20" fill="url(#brass)" stroke="#1d1006" stroke-width="4"/>
+        <circle cx="300" cy="170" r="7" fill="#3b2209" stroke="#000" stroke-width="2"/>
+        <rect x="292" y="130" width="16" height="22" fill="url(#brass)" stroke="#1d1006" stroke-width="3"/>
+        <circle cx="300" cy="122" r="10" fill="#ffd24a" stroke="#000" stroke-width="3"/>
+      </svg>
+
+    </section>
+
+    <section class="controls">
+      <div class="pips" id="pips"></div>
+      <div class="poolhint" id="poolHint">Toca varias pesas para seleccionarlas (se iluminan) y pulsa «Colocar»</div>
+      <div class="pool" id="pool"></div>
+      <div class="inputrow">
+        <div class="ac">
+          <input id="q" type="text" autocomplete="off" spellcheck="false" placeholder="Escribe para buscar…" aria-label="Elegir pesa" role="combobox" aria-expanded="false" aria-controls="list">
+          <ul id="list" role="listbox"></ul>
+        </div>
+        <button class="btn" id="place">⬇ Colocar pesa</button>
+      </div>
+      <div id="msg" role="status"></div>
+      <div class="row">
+        <button class="btn gold" id="finish">⚖ Terminar / Comprobar</button>
+        <button class="btn red small" id="showRes" style="display:none">★ Ver resultado</button>
+        <button class="btn blue small" id="hintTarget" title="Ver un vídeo para desbloquear la cifra del plato misterioso">📺 Ver objetivo</button>
+        <button class="btn blue small" id="hintDir" title="Ver un vídeo para saber hacia qué lado pesa ahora">📺 ¿Hacia dónde pesa?</button>
+        <button class="btn small" id="mute" title="Sonido" aria-label="Activar o silenciar el sonido">🔊</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>Prototipo · Cifras aproximadas de ejemplo · Todo es intuición: las cifras se revelan al terminar<br><a href="#" id="wipe" class="wipe">↺ Borrar progreso (solo para pruebas)</a></footer>
+</div>
+
+<div class="overlay" id="overlay" aria-hidden="true">
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle"></div>
+</div>
+<div class="overlay intro" id="intro" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Cómo se juega">
+    <div id="introBody"></div>
+    <div class="dots" id="introDots"></div>
+    <div class="introbtns">
+      <button class="btn small" id="introPrev">◀ Atrás</button>
+      <button class="skip" id="introSkip">Saltar</button>
+      <button class="btn gold" id="introNext">Siguiente ▶</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="adOverlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Anuncio con recompensa">
+    <h2>📺 ANUNCIO (SIMULADO)</h2>
+    <div class="adbox">Aquí iría tu vídeo con recompensa</div>
+    <div class="adbar"><i id="adBar"></i></div>
+    <p id="adTxt"></p>
+    <div class="actions">
+      <button class="btn gold small" id="adGo" disabled>Espera…</button>
+      <button class="btn small" id="adClose">Cerrar sin premio</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast">¡COPIADO!</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============ DATOS DE PRUEBA ============ */
+const CHALLENGES = [
+  {
+    id:3, emoji:'🎬', cat:'Cine', tab:'🎬 CINE',
+    label:'Recaudación de Avatar', target:2923, unit:'M$',
+    placeholder:'Taquillazo de Hollywood…',
+    options:[
+      ['Titanic',2264],['Avengers: Endgame',2799],['Jurassic Park',1047],['Barbie',1446],
+      ['Star Wars: El despertar de la Fuerza',2071],['Avengers: Infinity War',2052],['Spider-Man: No Way Home',1922],
+      ['Jurassic World',1671],['El Rey León (2019)',1657],['Los Vengadores',1519],['Fast & Furious 7',1515],
+      ['Frozen II',1453],['Top Gun: Maverick',1496],['Black Panther',1349],['Harry Potter y las Reliquias II',1342],
+      ['Frozen',1280],['Oppenheimer',975],['Joker',1074],['Del revés 2',1699],['Deadpool y Lobezno',1338],
+      ['Ne Zha 2',2150],['Avatar: El sentido del agua',2320],['Super Mario Bros. La película',1360],
+      ['Parásitos',263],['Pulp Fiction',214],['Terminator 2',520],['Gladiator',460],['Matrix',467],
+      ['La La Land',446],['Amélie',174],['Whiplash',49]
+    ]
+  }
+].map(c => ({...c, options: c.options.map(([n,v]) => ({n, v}))}));
+
+const POOLS = {
+  3:['Titanic','Avengers: Endgame','Barbie','Joker','Oppenheimer','Jurassic Park','Frozen','Terminator 2','Gladiator','Matrix','La La Land','Parásitos','Pulp Fiction','Amélie','Whiplash']
+};
+CHALLENGES.forEach(c => { c.pool = POOLS[c.id].map(n => c.options.find(o => o.n === n)); });
+
+const COLORS = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#16a085','#d35400','#e84393'];
+
+/* ============ UTILIDADES ============ */
+const $ = s => document.querySelector(s);
+const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+const fmt = n => Number(n).toLocaleString('es-ES');
+const SVGNS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs){
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+/* ============ AUDIO (Web Audio API sintetizado) ============ */
+let actx = null, muted = false;
+function ensureAudio(){
+  if (muted) return null;
+  try{
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+  }catch(e){ actx = null; }
+  return actx;
+}
+function tone(freq, dur, type, vol, slideTo, delay){
+  const ctx = ensureAudio(); if (!ctx) return;
+  const t0 = ctx.currentTime + (delay || 0);
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type || 'square';
+  o.frequency.setValueAtTime(freq, t0);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+  g.gain.setValueAtTime(vol || .1, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t0); o.stop(t0 + dur + .02);
+}
+function noise(dur, vol, delay){
+  const ctx = ensureAudio(); if (!ctx) return;
+  const t0 = ctx.currentTime + (delay || 0);
+  const len = Math.floor(ctx.sampleRate * dur);
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i=0;i<len;i++) d[i] = (Math.random()*2-1) * (1 - i/len);
+  const s = ctx.createBufferSource(), g = ctx.createGain();
+  s.buffer = buf; g.gain.value = vol;
+  s.connect(g); g.connect(ctx.destination); s.start(t0);
+}
+const sfx = {
+  click(){ tone(900,.05,'square',.05); },
+  drop(n){ tone(220,.14,'square',.14,60); noise(.12,.08); tone(520+n*140,.1,'square',.08,undefined,.09); },
+  tilt(){ tone(300,.35,'triangle',.09,520); },
+  error(){ tone(160,.18,'sawtooth',.1,100); },
+  win(stars){
+    const seq = [523,659,784,1047,1319].slice(0, 2 + stars);
+    seq.forEach((f,i)=> tone(f,.16,'square',.1,undefined,i*.11));
+  },
+  lose(){ tone(300,.5,'sawtooth',.12,60); tone(200,.5,'square',.08,40,.2); }
+};
+
+/* ============ ESTADO ============ */
+let ch = CHALLENGES[0], cur = 0;
+let weights = [], selected = null, busy = false, finished = false, lastResult = null;
+let selSet = [];   // selección múltiple (modo lista)
+let src = 'pool', revealed = false, hintsUsed = 0, hintDir = '', hintAngle = 0, swayT = null, targetShown = false;
+const avail = () => src === 'pool' ? ch.pool : ch.options;
+let activeIdx = -1, matches = [];
+
+/* ============ REFERENCIAS DOM ============ */
+const q = $('#q'), list = $('#list'), msg = $('#msg');
+const beam = $('#beam'), plateL = $('#plateL'), plateR = $('#plateR'), needle = $('#needle');
+const blocksR = $('#blocksR');
+
+/* ============ DIAL ============ */
+(function buildDial(){
+  const cx = 300, cy = 430;
+  const polar = (r,a)=>{ const t=a*Math.PI/180; return [cx + r*Math.sin(t), cy - r*Math.cos(t)]; };
+  const arc = (a1,a2,r)=>{ const [x1,y1]=polar(r,a1), [x2,y2]=polar(r,a2); return `M${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`; };
+  const g = $('#dialMarks');
+  const zones = [[-64,-12,'#d6303f'],[-12,-4,'#f2b233'],[-4,4,'#35d07f'],[4,12,'#f2b233'],[12,64,'#d6303f']];
+  zones.forEach(([a,b,c])=> g.appendChild(svgEl('path',{d:arc(a,b,52),stroke:c,'stroke-width':12,fill:'none'})));
+  for (let a=-60; a<=60; a+=10){
+    const [x1,y1]=polar(60,a), [x2,y2]=polar(a%30===0?66:63,a);
+    g.appendChild(svgEl('line',{x1,y1,x2,y2,stroke:'#cfd6ff','stroke-width':a===0?3:2}));
+  }
+})();
+
+/* ============ INCLINACIÓN ============ */
+function angleFor(R, L){ return clamp((R - L) / L * 40, -30, 30); }
+function applyTilt(a){
+  beam.style.transform = `rotate(${a}deg)`;
+  plateL.style.transform = `rotate(${-a}deg)`;
+  plateR.style.transform = `rotate(${-a}deg)`;
+  needle.style.transform = `rotate(${a*2}deg)`;
+}
+const sum = () => weights.reduce((s,w)=>s+w.v, 0);
+const devPct = R => Math.abs(R - ch.target) / ch.target * 100;
+
+function updateTotals(){
+  if (revealed){ updateTotalsRevealed(); return; }
+  // Partida en curso: la balanza NO da información (solo balanceo decorativo)
+  $('#valRight').textContent = weights.length + (weights.length === 1 ? ' pesa' : ' pesas');
+  const led = $('#led'), sub = $('#ledSub');
+  led.className = 'led amber';
+  led.textContent = '???';
+  sub.textContent = hintDir || 'Plato misterioso';
+  if (hintDir){ stopSway(); applyTilt(hintAngle); }
+  else startSway();
+}
+
+/* Balanceo decorativo: siempre igual, no depende de las pesas */
+function startSway(){
+  stopSway();
+  applyTilt(0);
+  let k = 1;
+  swayT = setInterval(()=>{
+    if (busy || revealed || hintDir) return;
+    k = -k; applyTilt(k * 1.6);
+  }, 2200);
+}
+function stopSway(){ if (swayT){ clearInterval(swayT); swayT = null; } }
+function setSlow(on){
+  [beam, plateL, plateR, needle].forEach(e => { e.style.transitionDuration = on ? '1.8s' : ''; });
+}
+function updateTotalsRevealed(){
+  const R = sum(), L = ch.target, diff = R - L;
+  applyTilt(angleFor(R, L));
+  $('#valRight').textContent = fmt(R);
+  $('#plateRText').textContent = 'TUS PESAS';
+  const led = $('#led'), sub = $('#ledSub');
+  let cls = 'red';
+  const dev = devPct(R);
+  if (R > 0 || diff !== 0){ cls = dev === 0 ? 'green' : dev <= 5 ? 'green' : dev <= 15 ? 'amber' : 'red'; }
+  led.className = 'led ' + cls;
+  if (weights.length === 0){
+    led.textContent = '−' + fmt(L);
+    sub.textContent = 'Coloca tu primera pesa';
+  } else if (diff === 0){
+    led.textContent = '= 0';
+    sub.textContent = '¡EQUILIBRIO!';
+  } else {
+    led.textContent = (diff > 0 ? '+' : '−') + fmt(Math.abs(diff));
+    sub.textContent = diff < 0 ? `Faltan ${fmt(-diff)} ${ch.unit}` : `Te pasas ${fmt(diff)} ${ch.unit}`;
+  }
+}
+
+/* ============ PIPS Y CHIPS ============ */
+function renderPips(){
+  const p = $('#pips');
+  p.innerHTML = '';
+  const s = document.createElement('span');
+  s.textContent = `PESAS EN EL PLATO: ${weights.length}`;
+  p.appendChild(s);
+}
+function renderChips(){ renderPool(); }
+
+function updatePlaceBtn(){
+  const n = selSet.length;
+  $('#place').textContent = n
+    ? `⬇ Colocar ${n} ${n === 1 ? 'pesa' : 'pesas'}`
+    : '⬇ Colocar pesa';
+}
+function renderPool(){
+  const p = $('#pool');
+  p.innerHTML = '';
+  $('#poolHint').style.display = finished ? 'none' : '';
+  document.querySelector('.ac').style.display = 'none';
+  updatePlaceBtn();
+  [...ch.pool].sort((a, b) => a.n.localeCompare(b.n, 'es')).forEach(o=>{   // orden alfabético: no delata valores
+    const b = document.createElement('button');
+    const wi = weights.findIndex(w => w.n === o.n);
+    const placed = wi >= 0;
+    b.className = 'pbtn' + (placed ? ' placed' : '') + (selSet.includes(o) ? ' sel' : '') + (finished && !placed ? ' off' : '');
+    if (placed){
+      const dot = document.createElement('span');
+      dot.className = 'pdot'; dot.style.background = COLORS[wi % COLORS.length];
+      b.appendChild(dot);
+    }
+    b.appendChild(document.createTextNode(o.n));
+    if (revealed){                       // al terminar se ven todos los valores
+      const v = document.createElement('small');
+      v.className = 'pv'; v.textContent = fmt(o.v) + ' ' + ch.unit;
+      b.appendChild(v);
+    }
+    b.addEventListener('click', ()=>{
+      if (finished || busy || placed) return;
+      ensureAudio(); sfx.click();
+      const i = selSet.indexOf(o);
+      if (i >= 0) selSet.splice(i, 1); else selSet.push(o);
+      setMsg('');
+      renderPool();
+    });
+    p.appendChild(b);
+  });
+}
+
+/* ============ BLOQUES EN EL PLATO ============ */
+function abbr(name){
+  const clean = name.replace(/[^A-Za-zÀ-ÿ0-9 ]/g,'').trim();
+  const words = clean.split(/\s+/);
+  const base = words.length > 1 ? words[0][0] + words[1].slice(0,2) : clean.slice(0,3);
+  return base.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+}
+function addBlock(opt, i, instant){
+  const g = svgEl('g', {class: instant ? 'blk' : 'blk drop'});
+  const col = i % 6, row = Math.floor(i / 6);
+  const x = 442 + col*23, y = 268 - row*22;
+  g.appendChild(svgEl('rect',{x,y,width:22,height:20,fill:COLORS[i % COLORS.length],stroke:'#000','stroke-width':2}));
+  g.appendChild(svgEl('rect',{x:x+2,y:y+2,width:18,height:3,fill:'#fff',opacity:.35}));
+  const t = svgEl('text',{x:x+11,y:y+14,'text-anchor':'middle','font-family':'Press Start 2P, monospace','font-size':6,fill:'#fff'});
+  t.textContent = abbr(opt.n);
+  g.appendChild(t);
+  blocksR.appendChild(g);
+}
+
+/* ============ AUTOCOMPLETADO ============ */
+function computeMatches(){
+  const t = norm(q.value);
+  const used = new Set(weights.map(w=>w.n));
+  let arr = avail().filter(o => !used.has(o.n));
+  if (t){
+    arr = arr.filter(o => norm(o.n).includes(t));
+    arr.sort((a,b)=>{
+      const sa = norm(a.n).startsWith(t) ? 0 : 1, sb = norm(b.n).startsWith(t) ? 0 : 1;
+      return sa - sb || a.n.localeCompare(b.n, 'es');
+    });
+  } else arr.sort((a,b)=>a.n.localeCompare(b.n,'es'));
+  return arr;
+}
+function renderList(){
+  matches = computeMatches();
+  list.innerHTML = '';
+  if (!matches.length){
+    const li = document.createElement('li');
+    li.className = 'none'; li.textContent = 'Sin resultados…';
+    list.appendChild(li);
+    activeIdx = -1;
+  } else {
+    const t = norm(q.value);
+    matches.forEach((o,i)=>{
+      const li = document.createElement('li');
+      li.setAttribute('role','option');
+      const nn = norm(o.n), at = t ? nn.indexOf(t) : -1;
+      if (at >= 0){
+        li.appendChild(document.createTextNode(o.n.slice(0,at)));
+        const b = document.createElement('b'); b.textContent = o.n.slice(at, at + t.length);
+        li.appendChild(b);
+        li.appendChild(document.createTextNode(o.n.slice(at + t.length)));
+      } else li.textContent = o.n;
+      li.addEventListener('mousedown', e => { e.preventDefault(); chooseOption(o); });
+      list.appendChild(li);
+    });
+    activeIdx = t ? 0 : -1;
+    highlight();
+  }
+  list.classList.add('open');
+  q.setAttribute('aria-expanded','true');
+}
+function highlight(){
+  [...list.children].forEach((li,i)=> li.classList.toggle('active', i === activeIdx));
+  const a = list.children[activeIdx];
+  if (a && a.scrollIntoView) a.scrollIntoView({block:'nearest'});
+}
+function closeList(){ list.classList.remove('open'); q.setAttribute('aria-expanded','false'); }
+function chooseOption(o){
+  selected = o; q.value = o.n; closeList(); sfx.click();
+  setMsg('');
+}
+function setMsg(t){ msg.textContent = t; }
+
+q.addEventListener('input', ()=>{
+  const m = avail().find(o => norm(o.n) === norm(q.value) && !weights.some(w=>w.n===o.n));
+  selected = m || null;
+  renderList();
+});
+q.addEventListener('focus', ()=>{ if (!finished && !busy) renderList(); });
+q.addEventListener('keydown', e=>{
+  const open = list.classList.contains('open');
+  if (e.key === 'ArrowDown'){ e.preventDefault(); if(!open) renderList(); else { activeIdx = Math.min(matches.length-1, activeIdx+1); highlight(); } }
+  else if (e.key === 'ArrowUp'){ e.preventDefault(); if (open){ activeIdx = Math.max(0, activeIdx-1); highlight(); } }
+  else if (e.key === 'Escape'){ closeList(); }
+  else if (e.key === 'Enter'){
+    e.preventDefault();
+    if (open && activeIdx >= 0 && matches[activeIdx]){ chooseOption(matches[activeIdx]); }
+    else placeWeight();
+  }
+});
+document.addEventListener('click', e=>{ if (!e.target.closest('.ac')) closeList(); });
+
+/* ============ DÍA, PROGRESO Y ESTADÍSTICAS ============ */
+const EPOCH = new Date(2026, 9, 23);              // reto nº 1
+const STORE_KEY = 'la-balanza-prototipo-v1';
+function dayNo(){
+  const p = new URLSearchParams(location.search).get('dia');   // ?dia=5 para probar otro día
+  if (p && /^\d+$/.test(p)) return Math.max(1, parseInt(p, 10));
+  const n = new Date();
+  const t = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  return Math.max(1, Math.round((t - EPOCH) / 864e5) + 1);
+}
+let store = (function(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }catch(e){ return {}; } })();
+store.history = store.history || {};
+function saveStore(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(store)); }catch(e){} }
+function saveProgress(done){
+  store.today = { day: dayNo(), weights: weights.map(w => w.n), hints: hintsUsed, targetShown: targetShown, done: !!done };
+  saveStore();
+}
+function rangeHint(){
+  const d = String(ch.target).length;
+  return `🔎 Una cifra de ${d} dígitos (${fmt(Math.pow(10, d - 1))}–${fmt(Math.pow(10, d) - 1)} ${ch.unit})`;
+}
+function showTargetHint(){
+  $('#valTarget').textContent = fmt(ch.target) + ' ' + ch.unit;
+  $('#targetBlockText').textContent = fmt(ch.target);
+  $('#rangeHint').textContent = '';
+  $('#hintTarget').disabled = true;
+}
+function statsData(){
+  const h = store.history, days = Object.keys(h).map(Number).sort((a, b) => a - b);
+  const dist = [0, 0, 0, 0];
+  days.forEach(d => dist[h[d].stars]++);
+  let best = 0, run = 0, prev = null;
+  days.forEach(d => { run = (prev !== null && d === prev + 1) ? run + 1 : 1; best = Math.max(best, run); prev = d; });
+  const today = dayNo();
+  let cur = 0, d = h[today] ? today : today - 1;
+  while (h[d]){ cur++; d--; }
+  return { played: days.length, dist, best, cur };
+}
+function statsHtml(){
+  const s = statsData(), max = Math.max(1, ...s.dist);
+  const bars = [3, 2, 1, 0].map(k =>
+    `<div class="bar"><span>${k ? '★'.repeat(k) : '💥'}</span><i style="width:${Math.max(8, s.dist[k] / max * 100)}%">${s.dist[k]}</i></div>`).join('');
+  return `<div class="stat">
+      <div><small>PARTIDAS</small><span>${s.played}</span></div>
+      <div><small>RACHA</small><span>${s.cur}</span></div>
+      <div><small>MEJOR RACHA</small><span>${s.best}</span></div>
+    </div><div class="bars">${bars}</div>`;
+}
+let cdT = null;
+function nextIn(){
+  const n = new Date(), t = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1);
+  const s = Math.max(0, Math.floor((t - n) / 1000)), p = x => String(x).padStart(2, '0');
+  return `${p(Math.floor(s / 3600))}:${p(Math.floor(s % 3600 / 60))}:${p(s % 60)}`;
+}
+function stopCountdown(){ if (cdT){ clearInterval(cdT); cdT = null; } }
+function startCountdown(){
+  stopCountdown();
+  const el = $('#nextIn'); if (!el) return;
+  el.textContent = nextIn();
+  cdT = setInterval(()=>{ const e = $('#nextIn'); if (!e){ stopCountdown(); return; } e.textContent = nextIn(); }, 1000);
+}
+
+/* ============ JUEGO ============ */
+function placeWeight(){
+  if (finished || busy) return;
+  if (weights.length >= avail().length){ setMsg('Ya no quedan pesas por colocar.'); return; }
+  let opts = [];
+  if (src === 'pool'){
+    opts = selSet.filter(o => !weights.some(w => w.n === o.n));
+  } else {
+    const one = selected || avail().find(o => norm(o.n) === norm(q.value) && !weights.some(w=>w.n===o.n)) || null;
+    if (one) opts = [one];
+  }
+  if (!opts.length){
+    setMsg(src === 'pool' ? 'Toca una o varias pesas del panel y pulsa Colocar.' : (q.value.trim() ? 'Elige una opción válida de la lista.' : 'Escribe y elige una pesa de la lista.'));
+    sfx.error();
+    if (src !== 'pool'){ q.classList.remove('shake'); void q.offsetWidth; q.classList.add('shake'); renderList(); }
+    return;
+  }
+  busy = true;
+  $('#place').disabled = true; $('#finish').disabled = true;
+  selSet = []; selected = null; q.value = ''; closeList(); setMsg('');
+  hintDir = '';
+
+  const STEP = 380;           // las pesas caen una tras otra
+  opts.forEach((opt, k)=>{
+    setTimeout(()=>{
+      weights.push(opt);
+      const idx = weights.length - 1;
+      addBlock(opt, idx);
+      renderPips(); renderChips(); saveProgress();
+      setTimeout(()=>{        // impacto en el plato (siempre el mismo "golpe", no da pistas)
+        sfx.drop(Math.min(idx, 10));
+        stopSway();
+        applyTilt(8);
+      }, 430);
+    }, k * STEP);
+  });
+
+  const lastAt = (opts.length - 1) * STEP;
+  setTimeout(()=>{ if (!revealed) updateTotals(); }, lastAt + 430 + 550);
+  setTimeout(()=>{            // tras asentarse la balanza
+    busy = false;
+    $('#place').disabled = false; $('#finish').disabled = false;
+    if (src !== 'pool') q.focus();
+  }, lastAt + 1250);
+}
+
+function revealTarget(){
+  revealed = true; stopSway(); setSlow(true); hintDir = '';
+  $('#hintTarget').disabled = true; $('#hintDir').disabled = true;
+  $('#scale').classList.add('rev'); $('#rangeHint').textContent = '';
+  $('#valTarget').textContent = fmt(ch.target) + ' ' + ch.unit;
+  $('#targetBlockText').textContent = fmt(ch.target);
+  renderChips();
+  sfx.tilt();
+  updateTotals();
+}
+
+function starsFor(R){
+  const d = devPct(R);
+  if (d <= 2) return 3;
+  if (d <= 5) return 2;
+  if (d <= 15) return 1;
+  return 0;
+}
+
+function finishGame(){
+  if (finished || busy) return;
+  if (!weights.length){
+    setMsg('Coloca al menos una pesa antes de comprobar.');
+    sfx.error(); return;
+  }
+  finished = true;
+  q.disabled = true; $('#place').disabled = true; $('#finish').disabled = true;
+  closeList();
+  const R = sum();
+  const stars = starsFor(R);
+  lastResult = { R, stars, dev: devPct(R), weights: weights.slice() };
+  store.history[dayNo()] = { stars, dev: devPct(R), n: weights.length, hints: hintsUsed };
+  saveProgress(true);
+  revealTarget();
+  if (stars > 0){ $('#screen').classList.add('win'); sfx.win(stars); } else sfx.lose();
+  $('#showRes').style.display = '';
+  setTimeout(openModal, 3000);
+}
+
+function shareText(){
+  const r = lastResult, n = dayNo();
+  const devStr = r.dev === 0 ? '0' : r.dev.toFixed(1).replace('.0','');
+  const starStr = r.stars ? '⭐'.repeat(r.stars) : '💥';
+  let run = 0; const cells = [];
+  r.weights.forEach(w=>{
+    run += w.v;
+    const d = Math.abs(run - ch.target) / ch.target * 100;
+    cells.push(d <= 2 ? '🟦' : d <= 5 ? '🟩' : d <= 15 ? '🟨' : '🟥');
+  });
+  let grid = '';
+  for (let i=0;i<cells.length;i+=5) grid += cells.slice(i, i+5).join('') + '\n';
+  return `⚖️ LA BALANZA #${n}: ${starStr} (Desvío: ${devStr}%)\n${ch.emoji} ${r.weights.length} pesas` + (hintsUsed ? `  📺×${hintsUsed}` : '') + '\n' + grid.trimEnd();
+}
+
+function openModal(){
+  const r = lastResult; if (!r) return;
+  const modal = $('#modal');
+  const titles = ['BALANZA DESCOMPENSADA','¡BIEN EQUILIBRADA!','¡CASI PERFECTO!','¡EQUILIBRIO PERFECTO!'];
+  const signed = r.R === ch.target ? '0%' : ((r.R > ch.target ? '+' : '−') + r.dev.toFixed(1).replace('.0','') + '%');
+  let rows = '';
+  r.weights.forEach((w,i)=>{
+    rows += `<tr><td><span style="display:inline-block;width:12px;height:12px;border:2px solid #000;background:${COLORS[i % COLORS.length]};margin-right:8px"></span>${w.n}</td><td>+${fmt(w.v)}</td></tr>`;
+  });
+  rows += `<tr class="sum"><td>TOTAL</td><td>${fmt(r.R)} ${ch.unit}</td></tr>`;
+  modal.innerHTML = `
+    <h2 id="mTitle" class="${r.stars ? '' : 'lose'}">${titles[r.stars]}</h2>
+    <div class="stars">${[0,1,2].map(i=>`<span class="${i < r.stars ? 'on' : 'off'}">★</span>`).join('')}</div>
+    <div>${ch.label}</div>
+    <table class="tbl">${rows}</table>
+    <div class="stat">
+      <div><small>OBJETIVO</small><span>${fmt(ch.target)}</span></div>
+      <div><small>CONSEGUIDO</small><span>${fmt(r.R)}</span></div>
+      <div><small>DESVÍO</small><span>${signed}</span></div>
+    </div>
+    <div class="share-preview" id="sharePrev"></div>
+    <div class="actions"><button class="btn gold" id="mShare">📋 Compartir resultado</button></div>
+    <h2 style="margin-top:18px">ESTADÍSTICAS</h2>
+    ${statsHtml()}
+    <div class="nextin">PRÓXIMO RETO EN<b id="nextIn">--:--:--</b></div>
+    <div class="actions"><button class="btn small" id="mClose">Cerrar</button></div>`;
+  $('#sharePrev').textContent = shareText();
+  $('#overlay').classList.add('open');
+  $('#overlay').setAttribute('aria-hidden','false');
+  $('#mShare').addEventListener('click', copyShare);
+  $('#mClose').addEventListener('click', closeModal);
+  startCountdown();
+}
+function openStats(){
+  const done = !!store.history[dayNo()];
+  $('#modal').innerHTML = `
+    <h2 id="mTitle">ESTADÍSTICAS</h2>
+    ${statsHtml()}
+    <div class="nextin">${done ? 'PRÓXIMO RETO EN<b id="nextIn">--:--:--</b>' : 'HOY AÚN NO HAS JUGADO'}</div>
+    <div class="actions"><button class="btn small" id="mClose">Cerrar</button></div>`;
+  $('#overlay').classList.add('open');
+  $('#overlay').setAttribute('aria-hidden','false');
+  $('#mClose').addEventListener('click', closeModal);
+  startCountdown();
+}
+function closeModal(){
+  stopCountdown();
+  $('#overlay').classList.remove('open');
+  $('#overlay').setAttribute('aria-hidden','true');
+}
+$('#overlay').addEventListener('click', e=>{ if (e.target.id === 'overlay') closeModal(); });
+document.addEventListener('keydown', e=>{ if (e.key === 'Escape' && $('#overlay').classList.contains('open')) closeModal(); });
+
+function toast(t){
+  const el = $('#toast'); el.textContent = t; el.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(()=> el.classList.remove('show'), 1800);
+}
+function copyShare(){
+  const text = shareText();
+  const fallback = ()=>{
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false;
+    try{ ok = document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    toast(ok ? '¡COPIADO!' : 'NO SE PUDO COPIAR');
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=> toast('¡COPIADO!'), fallback);
+  } else fallback();
+  sfx.click();
+}
+
+function resetGame(){
+  weights = []; selected = null; selSet = []; busy = false; finished = false; lastResult = null; revealed = false;
+  stopSway(); setSlow(false); hintsUsed = 0; hintDir = ''; hintAngle = 0;
+  $('#hintTarget').disabled = false; $('#hintDir').disabled = false;
+  $('#valTarget').textContent = '???';
+  $('#targetBlockText').textContent = '???';
+  $('#scale').classList.remove('rev');
+  $('#rangeHint').textContent = rangeHint();
+  targetShown = false;
+  blocksR.innerHTML = '';
+  q.value = ''; q.disabled = false; q.placeholder = ch.placeholder;
+  $('#place').disabled = false; $('#finish').disabled = false;
+  $('#showRes').style.display = 'none';
+  $('#screen').classList.remove('win');
+  closeList(); setMsg('');
+  renderPips(); renderChips(); updateTotals();
+}
+
+function loadChallenge(i){
+  cur = i; ch = CHALLENGES[i];
+  document.querySelectorAll('.tab').forEach((t,k)=> t.classList.toggle('active', k === i));
+  $('#lblTarget').textContent = ch.label;
+  $('#valTarget').textContent = fmt(ch.target) + ' ' + ch.unit;
+  $('#targetBlockText').textContent = fmt(ch.target);
+  $('#targetBlockText').setAttribute('font-size', String(fmt(ch.target)).length > 4 ? 11 : 13);
+  closeModal();
+  resetGame();
+}
+
+/* ============ INICIO ============ */
+$('#place').addEventListener('click', ()=>{ ensureAudio(); placeWeight(); });
+$('#finish').addEventListener('click', ()=>{ ensureAudio(); if (!busy) finishGame(); });
+$('#showRes').addEventListener('click', openModal);
+$('#hintTarget').addEventListener('click', ()=>{
+  if (finished || busy) return;
+  ensureAudio(); sfx.click();
+  showRewardedAd(()=>{
+    hintsUsed++; targetShown = true;
+    showTargetHint(); saveProgress();
+    sfx.win(1);
+    setMsg('Pista desbloqueada: el objetivo es ' + fmt(ch.target) + ' ' + ch.unit + '.');
+  });
+});
+$('#hintDir').addEventListener('click', ()=>{
+  if (finished || busy) return;
+  ensureAudio();
+  if (!weights.length){ setMsg('Coloca antes al menos una pesa.'); sfx.error(); return; }
+  sfx.click();
+  showRewardedAd(()=>{
+    hintsUsed++; saveProgress();
+    const R = sum(), L = ch.target;
+    if (R < L * .95){ hintDir = 'Pesa más el plato IZQUIERDO: te falta peso'; hintAngle = -10; }
+    else if (R > L * 1.05){ hintDir = 'Pesa más el plato DERECHO: te pasas'; hintAngle = 10; }
+    else { hintDir = '¡Muy cerca del equilibrio!'; hintAngle = 0; }
+    sfx.tilt();
+    updateTotals();
+  });
+});
+$('#mute').addEventListener('click', ()=>{
+  muted = !muted; $('#mute').textContent = muted ? '🔇' : '🔊';
+  if (!muted){ ensureAudio(); sfx.click(); }
+});
+document.addEventListener('pointerdown', ()=>{ ensureAudio(); }, {once:true});
+
+/* ============ ANUNCIO CON RECOMPENSA (SIMULADO) ============
+   Para producción: sustituye el cuerpo de showRewardedAd por la llamada a tu
+   red de anuncios con vídeo recompensado y ejecuta onReward() cuando el
+   usuario lo haya visto completo. */
+function showRewardedAd(onReward){
+  const ov = $('#adOverlay'), bar = $('#adBar'), txt = $('#adTxt'), btn = $('#adGo');
+  const TOTAL = 5; let t = TOTAL;
+  ov.classList.add('open'); ov.setAttribute('aria-hidden','false');
+  bar.style.width = '0%'; btn.disabled = true; btn.textContent = 'Espera…';
+  txt.textContent = `Recompensa en ${t} s`;
+  const stop = ()=>{ clearInterval(iv); ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); };
+  const iv = setInterval(()=>{
+    t--; bar.style.width = ((TOTAL - t) / TOTAL * 100) + '%';
+    if (t > 0) txt.textContent = `Recompensa en ${t} s`;
+    else { clearInterval(iv); txt.textContent = '¡Recompensa lista!'; btn.disabled = false; btn.textContent = 'Obtener recompensa'; }
+  }, 1000);
+  btn.onclick = ()=>{ if (btn.disabled) return; stop(); onReward(); };
+  $('#adClose').onclick = stop;
+}
+
+/* ============ PANTALLA DE INSTRUCCIONES ============ */
+const INTRO_FULL = [
+  { t:'', h:`
+    <div class="big">⚖️</div>
+    <div class="logo">LA BALANZA</div>
+    <p class="c">El juego diario de <b>intuición</b>.</p>
+    <p class="c">Un plato esconde una cifra misteriosa. Tú tienes unas pesas… pero tampoco sabes cuánto vale cada una. ¿Te fías de tu instinto?</p>
+    <p class="c" style="color:#8fa0ff">Te lo explico en 5 pasos rápidos.</p>` },
+  { t:'1 · EL RETO', h:`
+    <div class="demo">
+      <div class="dbox q"><small>PLATO IZQUIERDO</small>???</div>
+      <div class="dvs">⚖️</div>
+      <div class="dbox"><small>PLATO DERECHO</small>vacío</div>
+    </div>
+    <p>Cada día hay un reto con una <b>cifra misteriosa</b> en el plato izquierdo. Por ejemplo: <b>los goles oficiales de Messi</b>, la altura de la Torre Eiffel o lo que recaudó Avatar.</p>
+    <p>Tu misión: llenar el plato derecho con pesas para que <b>pese lo mismo</b>. Sabes de qué trata el reto, pero no cuál es su cifra.</p>` },
+  { t:'2 · LAS PESAS', h:`
+    <div class="demo">
+      <div class="dbox"><small>PESA A</small>?</div>
+      <div class="dbox sel"><small>PESA B</small>?</div>
+      <div class="dbox"><small>PESA C</small>?</div>
+      <div class="dbox sel"><small>PESA D</small>?</div>
+    </div>
+    <ul class="rules">
+      <li>Tienes una lista de <b>15 pesas</b> de la misma categoría (jugadores, monumentos, películas…).</li>
+      <li>Cada una vale una cifra real, pero <b>no la verás</b>: ni la de las pesas ni la del objetivo. Todo es intuición.</li>
+      <li>Toca <b>las que quieras</b> (se iluminan en dorado) y pulsa <b>«Colocar pesas»</b>: caerán al plato derecho.</li>
+      <li>Puedes colocar <b>todas las pesas que quieras</b>, pero una vez puesta, <b>no se puede quitar</b>.</li>
+    </ul>
+    <div class="tip">Casi siempre hay varias combinaciones que se acercan mucho al objetivo. Si no conoces una pesa, ¡combina otras!</div>` },
+  { t:'3 · LA BALANZA MISTERIOSA', h:`
+    <div class="demo">
+      <div class="dbox"><small>MIENTRAS JUEGAS</small>se mece suave</div>
+      <div class="dvs">▶</div>
+      <div class="dbox q"><small>AL COMPROBAR</small>¡se inclina!</div>
+    </div>
+    <ul class="rules">
+      <li>Mientras juegas, la balanza <b>no da pistas</b>: se mece despacio y cada pesa cae con el mismo golpe. El marcador muestra <b>???</b>.</li>
+      <li>Cuando creas que has igualado el plato, pulsa <b>«Terminar / Comprobar»</b>.</li>
+      <li>Entonces la balanza se inclina poco a poco y se <b>revela la cifra real</b>, además del valor de cada pesa que elegiste.</li>
+    </ul>
+    <div class="tip">Necesitas colocar al menos una pesa para poder comprobar.</div>` },
+  { t:'4 · LA PUNTUACIÓN', h:`
+    <p>Se mide el <b>desvío</b>: lo lejos que queda tu suma del objetivo, en porcentaje.</p>
+    <div class="stbl">
+      <div><span>★★★</span>Desvío de hasta el <b>2 %</b> · Equilibrio perfecto</div>
+      <div><span>★★</span>Desvío de hasta el <b>5 %</b> · Casi perfecto</div>
+      <div><span>★</span>Desvío de hasta el <b>15 %</b> · Bien equilibrada</div>
+      <div><span>💥</span>Más del 15 % · Balanza descompensada</div>
+    </div>
+    <div class="tip">Ejemplo: si el objetivo fuera 100 y tus pesas sumaran 103, el desvío sería del 3 % → ★★.</div>` },
+  { t:'5 · PISTAS Y COMPARTIR', h:`
+    <ul class="rules">
+      <li>¿Atascado? Puedes ver un vídeo para desbloquear una pista: <b>📺 Ver objetivo</b> te enseña la cifra, y <b>📺 ¿Hacia dónde pesa?</b> te dice si te falta o te sobra peso.</li>
+      <li>Si usas pistas, tu resultado lo indica con <b>📺×n</b>.</li>
+      <li>Al terminar, <b>comparte tu resultado</b> sin spoilers: una cuadrícula con cómo iba tu suma tras cada pesa. 🟦 ≤2 %, 🟩 ≤5 %, 🟨 ≤15 %, 🟥 más.</li>
+    </ul>
+    <div class="tip">Hay un reto nuevo cada día y solo una partida por día. ¡Vuelve mañana a por más estrellas!</div>` }
+];
+const INTRO_SHORT = [
+  { t:'', h:`
+    <div class="logo">LA BALANZA</div>
+    <div class="quick">
+      <div><span>⚖️</span><p>El plato izquierdo esconde una <b>cifra secreta</b>.</p></div>
+      <div><span>🧱</span><p>Elige pesas hasta <b>igualarlo a ojo</b>. No verás ningún valor.</p></div>
+      <div><span>⭐</span><p>Pulsa <b>Comprobar</b>: cuanto más cerca, más estrellas.</p></div>
+    </div>
+    <p class="c" style="color:#8fa0ff">Una partida al día · Solo intuición.</p>` }
+];
+let INTRO = INTRO_SHORT;
+let introI = 0;
+function renderIntro(){
+  const s = INTRO[introI], last = introI === INTRO.length - 1;
+  $('#introBody').innerHTML = (s.t ? `<h2>${s.t}</h2>` : '') + s.h;
+  $('#introDots').innerHTML = INTRO.length < 2 ? '' : INTRO.map((_, i) => `<i class="${i === introI ? 'on' : ''}"></i>`).join('');
+  $('#introPrev').style.visibility = introI ? 'visible' : 'hidden';
+  const short = INTRO === INTRO_SHORT;
+  $('#introSkip').textContent = short ? 'Ver reglas completas' : 'Saltar';
+  $('#introSkip').style.visibility = (last && !short) ? 'hidden' : 'visible';
+  $('#introNext').textContent = last ? '▶ ¡A JUGAR!' : (introI === 0 ? '▶ Empezar' : 'Siguiente ▶');
+  $('#intro .modal').scrollTop = 0;
+}
+function openIntro(i){
+  INTRO = INTRO_SHORT; introI = 0; renderIntro();
+  $('#intro').classList.add('open'); $('#intro').setAttribute('aria-hidden','false');
+  $('#introNext').focus();
+}
+function closeIntro(){
+  $('#intro').classList.remove('open'); $('#intro').setAttribute('aria-hidden','true');
+}
+function introStep(d){
+  ensureAudio(); sfx.click();
+  const n = introI + d;
+  if (n >= INTRO.length){ closeIntro(); return; }
+  if (n < 0) return;
+  introI = n; renderIntro(); $('#introNext').focus();
+}
+$('#introNext').addEventListener('click', ()=> introStep(1));
+$('#introPrev').addEventListener('click', ()=> introStep(-1));
+$('#introSkip').addEventListener('click', ()=>{
+  ensureAudio(); sfx.click();
+  if (INTRO === INTRO_SHORT){ INTRO = INTRO_FULL; introI = 1; renderIntro(); $('#introNext').focus(); }
+  else closeIntro();
+});
+$('#howTo').addEventListener('click', ()=>{ ensureAudio(); sfx.click(); openIntro(0); });
+document.addEventListener('keydown', e=>{
+  if (!$('#intro').classList.contains('open')) return;
+  if (e.key === 'ArrowRight') introStep(1);
+  else if (e.key === 'ArrowLeft') introStep(-1);
+  else if (e.key === 'Escape') closeIntro();
+});
+
+$('#statsBtn').addEventListener('click', ()=>{ ensureAudio(); sfx.click(); openStats(); });
+$('#wipe').addEventListener('click', e=>{
+  e.preventDefault();
+  try{ localStorage.removeItem(STORE_KEY); }catch(err){}
+  location.reload();
+});
+
+loadChallenge(0);
+$('#dayNum').textContent = '#' + dayNo();
+
+/* Restaurar la partida de hoy si ya había empezado o terminado */
+const saved = store.today;
+if (saved && saved.day === dayNo()){
+  hintsUsed = saved.hints || 0;
+  (saved.weights || []).forEach(n => {
+    const o = ch.pool.find(x => x.n === n);
+    if (o){ weights.push(o); addBlock(o, weights.length - 1, true); }
+  });
+  if (saved.targetShown){ targetShown = true; showTargetHint(); }
+  renderPips(); renderChips(); updateTotals();
+  const h = store.history[dayNo()];
+  if (saved.done && h){
+    finished = true;
+    q.disabled = true; $('#place').disabled = true; $('#finish').disabled = true;
+    const R = sum();
+    lastResult = { R, stars: h.stars, dev: devPct(R), weights: weights.slice() };
+    revealTarget();
+    $('#showRes').style.display = '';
+    setTimeout(openModal, 1500);
+  } else if (!weights.length && !hintsUsed){
+    openIntro(0);
+  }
+} else {
+  store.today = null;
+  openIntro(0);
+}
+})();
+</script>
+</body>
+</html>
